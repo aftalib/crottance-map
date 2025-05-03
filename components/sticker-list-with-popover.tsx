@@ -1,5 +1,4 @@
 "use client"
-
 import type { Sticker } from "@/lib/types"
 import { Loader2 } from "lucide-react"
 import { DeleteConfirmationPopover } from "@/components/delete-confirmation-popover"
