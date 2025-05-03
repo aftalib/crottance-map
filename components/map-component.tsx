@@ -17,7 +17,7 @@ function LocationMarker({ position }: { position: [number, number] }) {
   const map = useMap()
 
   useEffect(() => {
-    map.flyTo(position, map.getZoom())
+    map.flyTo(position, map.getZoom() < 12 ? 12 : map.getZoom())
   }, [map, position])
 
   return (
@@ -199,6 +199,23 @@ export default function MapComponent({ stickers, onMapClick, selectedLocation }:
             <Popup>
               <div className="text-center">
                 <h3 className="font-bold">{sticker.location}</h3>
+
+                {sticker.image_url && (
+                  <div className="my-2 rounded-md overflow-hidden border border-gray-200">
+                    <img
+                      src={sticker.image_url || "/placeholder.svg"}
+                      alt={sticker.location}
+                      className="w-full h-32 object-cover"
+                      onError={(e) => {
+                        // Fallback en cas d'erreur de chargement de l'image
+                        const target = e.target as HTMLImageElement
+                        target.onerror = null
+                        target.src = "https://placehold.co/200x150/crottance/white?text=Image+non+disponible"
+                      }}
+                    />
+                  </div>
+                )}
+
                 <p className="text-sm text-gray-600">Ajouté par: {sticker.addedBy}</p>
                 <p className="text-sm text-gray-600">Date: {new Date(sticker.date).toLocaleDateString()}</p>
                 {sticker.notes && <p className="mt-2">{sticker.notes}</p>}

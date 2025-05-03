@@ -7,4 +7,5 @@ export interface Sticker {
   latitude: number
   longitude: number
   created_at: string
+  image_url?: string
 }

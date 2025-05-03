@@ -42,6 +42,18 @@ export async function addSticker(sticker: Omit<Sticker, "id">): Promise<Sticker 
 
 export async function deleteSticker(id: string): Promise<boolean> {
   try {
+    // Récupérer d'abord le sticker pour obtenir l'URL de l'image
+    const { data: sticker } = await supabase.from("stickers").select("image_url").eq("id", id).single()
+
+    // Si le sticker a une image, la supprimer du bucket
+    if (sticker?.image_url) {
+      const imagePath = sticker.image_url.split("/").pop()
+      if (imagePath) {
+        await supabase.storage.from("sticker-images").remove([imagePath])
+      }
+    }
+
+    // Supprimer le sticker de la base de données
     const { error } = await supabase.from("stickers").delete().eq("id", id)
 
     if (error) {
@@ -53,5 +65,36 @@ export async function deleteSticker(id: string): Promise<boolean> {
   } catch (error) {
     console.error("Error deleting sticker:", error)
     return false
+  }
+}
+
+// Fonction pour télécharger une image vers Supabase Storage
+export async function uploadStickerImage(file: File): Promise<string | null> {
+  try {
+    // Générer un nom de fichier unique
+    const fileExt = file.name.split(".").pop()
+    const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.${fileExt}`
+
+    // Télécharger le fichier
+    const { data, error } = await supabase.storage.from("sticker-images").upload(fileName, file, {
+      cacheControl: "3600",
+      upsert: false,
+    })
+
+    if (error) {
+      console.error("Error uploading image:", error)
+      return null
+    }
+
+    // Obtenir l'URL publique de l'image
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from("sticker-images").getPublicUrl(data.path)
+
+    console.log("Image uploaded successfully, public URL:", publicUrl)
+    return publicUrl
+  } catch (error) {
+    console.error("Error uploading image:", error)
+    return null
   }
 }

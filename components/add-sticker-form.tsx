@@ -2,14 +2,17 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { UserSelect } from "@/components/user-select"
+import { AddressAutocomplete } from "@/components/address-autocomplete"
+import { ImageUpload } from "@/components/image-upload"
+import { uploadStickerImage } from "@/lib/supabase"
 import type { Sticker } from "@/lib/types"
-import { Loader2 } from "lucide-react"
+import { Loader2, MapPin } from "lucide-react"
 
 interface AddStickerFormProps {
   onAddSticker: (sticker: Omit<Sticker, "id">) => void
@@ -27,52 +30,50 @@ export default function AddStickerForm({
   const [location, setLocation] = useState("")
   const [addedBy, setAddedBy] = useState("")
   const [notes, setNotes] = useState("")
-  const [latitude, setLatitude] = useState("")
-  const [longitude, setLongitude] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [selectedImage, setSelectedImage] = useState<File | null>(null)
 
-  // Update form when selectedLocation changes
-  useEffect(() => {
-    if (selectedLocation) {
-      setLatitude(selectedLocation[0].toString())
-      setLongitude(selectedLocation[1].toString())
-    }
-  }, [selectedLocation])
+  const handleAddressSelect = (address: string, coordinates: [number, number]) => {
+    setLocation(address)
+    onLocationChange(coordinates)
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!location || !addedBy || !latitude || !longitude) return
-
-    const lat = Number.parseFloat(latitude)
-    const lng = Number.parseFloat(longitude)
-
-    if (isNaN(lat) || isNaN(lng)) {
-      alert("Veuillez entrer des coordonnées valides")
+    if (!location || !addedBy || !selectedLocation) {
       return
     }
 
     setIsSubmitting(true)
 
-    const newSticker: Omit<Sticker, "id"> = {
-      location,
-      addedBy,
-      notes,
-      date: new Date().toISOString(),
-      latitude: lat,
-      longitude: lng,
-      created_at: new Date().toISOString(),
-    }
-
     try {
+      const [latitude, longitude] = selectedLocation
+
+      // Télécharger l'image si elle existe
+      let image_url = undefined
+      if (selectedImage) {
+        image_url = await uploadStickerImage(selectedImage)
+      }
+
+      const newSticker: Omit<Sticker, "id"> = {
+        location,
+        addedBy,
+        notes,
+        date: new Date().toISOString(),
+        latitude,
+        longitude,
+        created_at: new Date().toISOString(),
+        image_url,
+      }
+
       await onAddSticker(newSticker)
 
       // Reset form
       setLocation("")
       setAddedBy("")
       setNotes("")
-      setLatitude("")
-      setLongitude("")
+      setSelectedImage(null)
     } catch (error) {
       console.error("Error submitting sticker:", error)
     } finally {
@@ -80,68 +81,28 @@ export default function AddStickerForm({
     }
   }
 
-  // Handle manual coordinate updates
-  const handleCoordinateChange = () => {
-    const lat = Number.parseFloat(latitude)
-    const lng = Number.parseFloat(longitude)
-
-    if (!isNaN(lat) && !isNaN(lng)) {
-      onLocationChange([lat, lng])
-    }
-  }
-
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <h2 className="text-xl font-bold mb-4 text-crottance-800">Ajouter un autocollant</h2>
 
-      <div className="bg-crottance-50 p-3 rounded-md mb-4 border border-crottance-100">
-        <p className="text-sm text-crottance-800">
-          Cliquez sur la carte pour sélectionner un emplacement ou entrez les coordonnées manuellement.
-        </p>
+      <div className="bg-crottance-50 p-3 rounded-md mb-4 border border-crottance-100 flex items-center">
+        <MapPin className="h-5 w-5 mr-2 text-crottance-600" />
+        {selectedLocation ? (
+          <p className="text-sm text-crottance-800">
+            Position sélectionnée : {selectedLocation[0].toFixed(4)}, {selectedLocation[1].toFixed(4)}
+          </p>
+        ) : (
+          <p className="text-sm text-crottance-800">
+            Recherchez une adresse ou cliquez sur la carte pour sélectionner un emplacement.
+          </p>
+        )}
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label htmlFor="latitude" className="text-crottance-800">
-            Latitude
-          </Label>
-          <Input
-            id="latitude"
-            type="text"
-            value={latitude}
-            onChange={(e) => setLatitude(e.target.value)}
-            onBlur={handleCoordinateChange}
-            placeholder="ex. 48.8566"
-            className="focus:border-crottance-500 focus:ring-crottance-500"
-            required
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="longitude" className="text-crottance-800">
-            Longitude
-          </Label>
-          <Input
-            id="longitude"
-            type="text"
-            value={longitude}
-            onChange={(e) => setLongitude(e.target.value)}
-            onBlur={handleCoordinateChange}
-            placeholder="ex. 2.3522"
-            className="focus:border-crottance-500 focus:ring-crottance-500"
-            required
-          />
-        </div>
-      </div>
-
-      <Button
-        type="button"
-        variant="outline"
-        size="sm"
-        className="w-full border-crottance-200 text-crottance-700 hover:bg-crottance-50"
-        onClick={handleCoordinateChange}
-      >
-        Mettre à jour la position
-      </Button>
+      <AddressAutocomplete
+        onAddressSelect={handleAddressSelect}
+        label="Rechercher un lieu"
+        placeholder="ex. Rue Alsace Lorraine, Toulouse"
+      />
 
       <div className="space-y-2">
         <Label htmlFor="location" className="text-crottance-800">
@@ -163,6 +124,8 @@ export default function AddStickerForm({
         </Label>
         <UserSelect value={addedBy} onChange={setAddedBy} placeholder="Sélectionner un utilisateur..." />
       </div>
+
+      <ImageUpload onImageSelect={setSelectedImage} />
 
       <div className="space-y-2">
         <Label htmlFor="notes" className="text-crottance-800">
@@ -191,7 +154,7 @@ export default function AddStickerForm({
         <Button
           type="submit"
           className="bg-crottance-600 hover:bg-crottance-700"
-          disabled={!location || !addedBy || !latitude || !longitude || isSubmitting}
+          disabled={!location || !addedBy || !selectedLocation || isSubmitting}
         >
           {isSubmitting ? (
             <>

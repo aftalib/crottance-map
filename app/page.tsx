@@ -116,10 +116,6 @@ function MainApp() {
     setShowForm(true)
   }
 
-  const handleLocationChange = (location: [number, number]) => {
-    setSelectedLocation(location)
-  }
-
   // Si non authentifié, afficher la page de connexion
   if (!isAuthenticated) {
     return <LoginPage />
@@ -158,21 +154,17 @@ function MainApp() {
                     setShowForm(false)
                     setSelectedLocation(null)
                   }}
-                  onLocationChange={handleLocationChange}
+                  onLocationChange={setSelectedLocation}
                 />
               ) : (
                 <div className="text-center">
-                  <p className="mb-4">
-                    Cliquez sur la carte pour ajouter un nouvel autocollant ou utilisez le bouton ci-dessous.
-                  </p>
+                  <p className="mb-4">Cliquez sur la carte pour ajouter un nouvel autocollant.</p>
                   <Button
                     className="bg-crottance-600 hover:bg-crottance-700"
                     onClick={() => {
                       setShowForm(true)
-                      if (!selectedLocation) {
-                        setSelectedLocation([48.8566, 2.3522]) // Default to Paris if no location selected
-                      }
                     }}
+                    disabled={!selectedLocation}
                   >
                     Ajouter un autocollant
                   </Button>
