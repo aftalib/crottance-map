@@ -10,6 +10,7 @@ interface MapComponentProps {
   stickers: Sticker[]
   onMapClick: (latlng: [number, number]) => void
   selectedLocation: [number, number] | null
+  focusedSticker: Sticker | null
 }
 
 // Component to handle selected location marker and map centering
@@ -35,6 +36,26 @@ function LocationMarker({ position }: { position: [number, number] }) {
       <Popup>Nouvel emplacement</Popup>
     </Marker>
   )
+}
+
+// Component to focus on a specific sticker
+function StickerFocus({ sticker }: { sticker: Sticker | null }) {
+  const map = useMap()
+
+  useEffect(() => {
+    if (sticker) {
+      map.flyTo([sticker.latitude, sticker.longitude], 15)
+
+      // Trouver le marqueur correspondant et ouvrir son popup
+      const markers = document.querySelectorAll(".leaflet-marker-icon")
+      if (markers.length > 0) {
+        // Nous ne pouvons pas facilement identifier quel marqueur correspond à notre sticker
+        // donc nous utilisons simplement la position pour centrer la carte
+      }
+    }
+  }, [map, sticker])
+
+  return null
 }
 
 // Component to handle map clicks with improved click detection
@@ -144,7 +165,7 @@ function MapClickHandler({ onMapClick }: { onMapClick: (latlng: [number, number]
   return null
 }
 
-export default function MapComponent({ stickers, onMapClick, selectedLocation }: MapComponentProps) {
+export default function MapComponent({ stickers, onMapClick, selectedLocation, focusedSticker }: MapComponentProps) {
   const [isClient, setIsClient] = useState(false)
   const mapRef = useRef(null)
 
@@ -191,7 +212,7 @@ export default function MapComponent({ stickers, onMapClick, selectedLocation }:
         />
 
         <MapClickHandler onMapClick={onMapClick} />
-
+        {focusedSticker && <StickerFocus sticker={focusedSticker} />}
         {selectedLocation && <LocationMarker position={selectedLocation} />}
 
         {stickers.map((sticker) => (

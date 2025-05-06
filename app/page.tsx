@@ -30,6 +30,7 @@ function MainApp() {
   const [showForm, setShowForm] = useState(false)
   const [selectedLocation, setSelectedLocation] = useState<[number, number] | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [focusedSticker, setFocusedSticker] = useState<Sticker | null>(null)
 
   // Charger les autocollants depuis Supabase
   const loadStickers = async () => {
@@ -96,6 +97,10 @@ function MainApp() {
       const success = await deleteSticker(id)
       if (success) {
         setStickers(stickers.filter((sticker) => sticker.id !== id))
+        // Si l'autocollant supprimé était celui qui était focus, on retire le focus
+        if (focusedSticker && focusedSticker.id === id) {
+          setFocusedSticker(null)
+        }
         toast({
           title: "Succès",
           description: "Autocollant supprimé avec succès",
@@ -114,6 +119,11 @@ function MainApp() {
   const handleMapClick = (latlng: [number, number]) => {
     setSelectedLocation(latlng)
     setShowForm(true)
+  }
+
+  const handleStickerSelect = (sticker: Sticker) => {
+    setFocusedSticker(sticker)
+    // Notification toast supprimée comme demandé
   }
 
   // Si non authentifié, afficher la page de connexion
@@ -139,7 +149,12 @@ function MainApp() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-2 crottance-card">
           <CardContent className="p-4">
-            <MapComponent stickers={stickers} onMapClick={handleMapClick} selectedLocation={selectedLocation} />
+            <MapComponent
+              stickers={stickers}
+              onMapClick={handleMapClick}
+              selectedLocation={selectedLocation}
+              focusedSticker={focusedSticker}
+            />
           </CardContent>
         </Card>
 
@@ -175,7 +190,12 @@ function MainApp() {
 
           <Card className="crottance-card">
             <CardContent className="p-4">
-              <StickerList stickers={stickers} onDelete={handleDeleteSticker} isLoading={isLoading} />
+              <StickerList
+                stickers={stickers}
+                onDelete={handleDeleteSticker}
+                onStickerSelect={handleStickerSelect}
+                isLoading={isLoading}
+              />
             </CardContent>
           </Card>
         </div>

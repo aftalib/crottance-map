@@ -1,16 +1,33 @@
 "use client"
 
+import { useEffect } from "react"
 import type { Sticker } from "@/lib/types"
 import { Loader2 } from "lucide-react"
 import { DeleteConfirmationPopover } from "@/components/delete-confirmation-popover"
+import { LocationInfo } from "@/components/location-info"
 
 interface StickerListProps {
   stickers: Sticker[]
   onDelete: (id: string) => void
+  onStickerSelect: (sticker: Sticker) => void
   isLoading?: boolean
 }
 
-export default function StickerList({ stickers, onDelete, isLoading = false }: StickerListProps) {
+export default function StickerList({ stickers, onDelete, onStickerSelect, isLoading = false }: StickerListProps) {
+  // Précharger les coordonnées pour les 5 premiers autocollants
+  useEffect(() => {
+    if (stickers.length > 0) {
+      // Précharger les coordonnées pour les 5 premiers autocollants
+      const preloadStickers = stickers.slice(0, 5)
+      preloadStickers.forEach((sticker) => {
+        // Créer des éléments image pour précharger les coordonnées
+        // Cette technique permet de contourner certaines limitations CORS
+        const img = new Image()
+        img.src = `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${sticker.latitude}&longitude=${sticker.longitude}&localityLanguage=fr&size=1x1`
+      })
+    }
+  }, [stickers])
+
   if (isLoading) {
     return (
       <div className="text-center py-6">
@@ -37,16 +54,21 @@ export default function StickerList({ stickers, onDelete, isLoading = false }: S
         {stickers.map((sticker) => (
           <div
             key={sticker.id}
-            className="p-3 border border-crottance-200 rounded-md flex justify-between items-start hover:bg-crottance-50 transition-colors"
+            className="p-3 border border-crottance-200 rounded-md flex justify-between items-start hover:bg-crottance-50 transition-colors cursor-pointer"
+            onClick={() => onStickerSelect(sticker)}
           >
-            <div>
+            <div className="flex-grow">
               <h3 className="font-medium text-crottance-800">{sticker.location}</h3>
-              <p className="text-sm text-crottance-600">
+              <LocationInfo latitude={sticker.latitude} longitude={sticker.longitude} />
+              <p className="text-sm text-crottance-600 mt-1">
                 Ajouté par {sticker.addedBy} le {new Date(sticker.date).toLocaleDateString()}
               </p>
               {sticker.notes && <p className="text-sm mt-1 text-crottance-700">{sticker.notes}</p>}
             </div>
-            <DeleteConfirmationPopover sticker={sticker} onDelete={onDelete} />
+            {/* Empêcher la propagation du clic pour le bouton de suppression */}
+            <div onClick={(e) => e.stopPropagation()}>
+              <DeleteConfirmationPopover sticker={sticker} onDelete={onDelete} />
+            </div>
           </div>
         ))}
       </div>
