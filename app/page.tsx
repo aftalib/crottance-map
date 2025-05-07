@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
 import dynamic from "next/dynamic"
@@ -31,6 +31,7 @@ function MainApp() {
   const [selectedLocation, setSelectedLocation] = useState<[number, number] | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [focusedSticker, setFocusedSticker] = useState<Sticker | null>(null)
+  const mapRef = useRef<HTMLDivElement>(null)
 
   // Charger les autocollants depuis Supabase
   const loadStickers = async () => {
@@ -123,7 +124,18 @@ function MainApp() {
 
   const handleStickerSelect = (sticker: Sticker) => {
     setFocusedSticker(sticker)
-    // Notification toast supprimée comme demandé
+    // Faire défiler vers la carte
+    scrollToMap()
+  }
+
+  // Fonction pour faire défiler vers la carte
+  const scrollToMap = () => {
+    if (mapRef.current) {
+      // Ajouter un petit délai pour laisser le temps à la carte de se mettre à jour
+      setTimeout(() => {
+        mapRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+      }, 100)
+    }
   }
 
   // Si non authentifié, afficher la page de connexion
@@ -147,7 +159,7 @@ function MainApp() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2 crottance-card">
+        <Card className="lg:col-span-2 crottance-card" ref={mapRef}>
           <CardContent className="p-4">
             <MapComponent
               stickers={stickers}

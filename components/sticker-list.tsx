@@ -56,6 +56,14 @@ export default function StickerList({ stickers, onDelete, onStickerSelect, isLoa
             key={sticker.id}
             className="p-3 border border-crottance-200 rounded-md flex justify-between items-start hover:bg-crottance-50 transition-colors cursor-pointer"
             onClick={() => onStickerSelect(sticker)}
+            aria-label={`Voir l'autocollant ${sticker.location} sur la carte`}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                onStickerSelect(sticker)
+              }
+            }}
           >
             <div className="flex-grow">
               <h3 className="font-medium text-crottance-800">{sticker.location}</h3>
