@@ -45,13 +45,6 @@ function StickerFocus({ sticker }: { sticker: Sticker | null }) {
   useEffect(() => {
     if (sticker) {
       map.flyTo([sticker.latitude, sticker.longitude], 15)
-
-      // Trouver le marqueur correspondant et ouvrir son popup
-      const markers = document.querySelectorAll(".leaflet-marker-icon")
-      if (markers.length > 0) {
-        // Nous ne pouvons pas facilement identifier quel marqueur correspond à notre sticker
-        // donc nous utilisons simplement la position pour centrer la carte
-      }
     }
   }, [map, sticker])
 
