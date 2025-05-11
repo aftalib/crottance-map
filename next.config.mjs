@@ -1,14 +1,5 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  async redirects() {
-    return [
-      {
-        source: '/:path*',
-        destination: 'https://crottance.com',
-        permanent: true,
-      },
-    ]
-  },
   eslint: {
     ignoreDuringBuilds: true,
   },
