@@ -24,6 +24,40 @@ export async function fetchStickers(): Promise<Sticker[]> {
   }
 }
 
+// Fonction pour récupérer les autocollants sans authentification
+export async function fetchPublicStickers(): Promise<Sticker[]> {
+  try {
+    const { data, error } = await supabase.from("stickers").select("*").order("created_at", { ascending: false })
+
+    if (error) {
+      console.error("Error fetching public stickers:", error)
+      return []
+    }
+
+    return data || []
+  } catch (error) {
+    console.error("Error fetching public stickers:", error)
+    return []
+  }
+}
+
+// Fonction pour obtenir le nombre total d'autocollants
+export async function getStickersCount(): Promise<number> {
+  try {
+    const { count, error } = await supabase.from("stickers").select("*", { count: "exact", head: true })
+
+    if (error) {
+      console.error("Error counting stickers:", error)
+      return 0
+    }
+
+    return count || 0
+  } catch (error) {
+    console.error("Error counting stickers:", error)
+    return 0
+  }
+}
+
 export async function addSticker(sticker: Omit<Sticker, "id">): Promise<Sticker | null> {
   try {
     const { data, error } = await supabase.from("stickers").insert([sticker]).select()
