@@ -96,6 +96,11 @@ export default function LoginPage() {
               </div>
             )}
           </div>
+          {stickers.length > 0 && (
+            <p className="text-sm text-center mt-2 text-gray-500">
+              
+            </p>
+          )}
         </div>
 
         {/* Formulaire de connexion */}

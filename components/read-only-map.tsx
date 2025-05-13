@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import L from "leaflet"
 import "leaflet/dist/leaflet.css"
 import type { Sticker } from "@/lib/types"
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet"
+import { MapContainer, TileLayer, Marker } from "react-leaflet"
 
 interface ReadOnlyMapProps {
   stickers: Sticker[]
@@ -65,30 +65,17 @@ export default function ReadOnlyMap({ stickers }: ReadOnlyMapProps) {
         />
 
         {stickers.map((sticker) => (
-          <Marker key={sticker.id} position={[sticker.latitude, sticker.longitude]} icon={stickerIcon}>
-            <Popup>
-              <div className="text-center">
-                <h3 className="font-bold">{sticker.location}</h3>
-                {sticker.image_url && (
-                  <div className="my-2 rounded-md overflow-hidden border border-gray-200">
-                    <img
-                      src={sticker.image_url || "/placeholder.svg"}
-                      alt={sticker.location}
-                      className="w-full h-32 object-cover"
-                      onError={(e) => {
-                        const target = e.target as HTMLImageElement
-                        target.onerror = null
-                        target.src = "https://placehold.co/200x150/crottance/white?text=Image+non+disponible"
-                      }}
-                    />
-                  </div>
-                )}
-                <p className="text-sm text-gray-600">Ajouté par: {sticker.addedBy}</p>
-                <p className="text-sm text-gray-600">Date: {new Date(sticker.date).toLocaleDateString()}</p>
-                {sticker.notes && <p className="mt-2">{sticker.notes}</p>}
-              </div>
-            </Popup>
-          </Marker>
+          <Marker
+            key={sticker.id}
+            position={[sticker.latitude, sticker.longitude]}
+            icon={stickerIcon}
+            eventHandlers={{
+              click: () => {}, // Désactive l'action au clic
+              mouseover: () => {}, // Désactive l'effet au survol
+              mouseout: () => {}, // Désactive l'effet à la sortie du survol
+            }}
+            interactive={false} // Rend le marqueur non interactif
+          />
         ))}
       </MapContainer>
     </div>
